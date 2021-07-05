@@ -5,87 +5,49 @@ import win32file
 import win32event
 import win32con
 
-cod_nvidia_highlights_path="./"
-cod_nvidia_highlights_file="test.txt"
-file_path=cod_nvidia_highlights_path + cod_nvidia_highlights_file
+# cod_nvidia_highlights_path="./"
+# cod_nvidia_highlights_file="test.txt"
+# file_path=cod_nvidia_highlights_path + cod_nvidia_highlights_file
 
 def checkIfExists(filePath):
   return os.path.exists(filePath) and os.path.isfile(filePath)
 
-def monitorFile(filePath):
-  try:
-    moddate = os.stat(filePath)[8] # there are 10 attributes this call returns and you want the next to last
-    changeHandle = win32file.FindFirstChangeNotification ( \
-    cod_nvidia_highlights_path, 0, win32con.FILE_NOTIFY_CHANGE_FILE_NAME | win32con.FILE_NOTIFY_CHANGE_SIZE)
-    while 1:
-      result = win32event.WaitForSingleObject (changeHandle, 500)
+class wzHighlightsMonitor:
+  def __init__(self, path, file) -> None:
+      self.file = file
+      self.folder = path
+      self.filePath = path + file
+      print (self.filePath)
+      self.status = checkIfExists(self.filePath)
+      if self.status:
+        print("File exists!")
+        self.changeHandle = win32file.FindFirstChangeNotification (self.folder, 
+        0,
+        win32con.FILE_NOTIFY_CHANGE_LAST_WRITE)
+        self.lastModDate = os.stat(self.filePath)[8]
+        print ("Initial file datime is " + time.ctime(self.lastModDate))
 
-      if result == win32con.WAIT_OBJECT_0:
-        new_moddate = os.stat(file_path)[8] # there are 10 attributes this call returns and you want the next to last
-        if new_moddate > moddate: print ("File Updated at " + time.ctime(new_moddate))
-        new_moddate = moddate
-        win32file.FindNextChangeNotification (changeHandle)
-  finally:
-    win32file.FindCloseChangeNotification (changeHandle)
+  def status(self):
+      return self.status
 
-def run(filePath):
-  if not checkIfExists(filePath): return False
+  def monitorFile(self):
+    try:
+      while 1:
+        result = win32event.WaitForSingleObject (self.changeHandle, 500)
 
-  # changeHandle = win32file.FindFirstChangeNotification ( \
-  #   cod_nvidia_highlights_path, 0, win32con.FILE_NOTIFY_CHANGE_FILE_NAME | win32con.FILE_NOTIFY_CHANGE_SIZE)
+        if result == win32con.WAIT_OBJECT_0:
+          moddate = os.stat(self.filePath)[8] # there are 10 attributes this call returns and you want the next to last
+          if moddate > self.lastModDate: print ("File Updated at " + time.ctime(moddate))
+          self.lastModDate = moddate
+          win32file.FindNextChangeNotification (self.changeHandle)
+    finally:
+      win32file.FindCloseChangeNotification (self.changeHandle)
 
-  try:
-    monitorFile(filePath)
-  except:
-    print("Quit")
+  def run(self):
+    try:
+      self.monitorFile()
+    except:
+      print("Quit")
 
-
-# def mixed_solution():
-#   if not os.path.exists(file_path):
-#     return False
-
-#   if not os.path.isfile(file_path):
-#     return False
-
-#   #
-#   # FindFirstChangeNotification sets up a handle for watching
-#   #  file changes. The first parameter is the path to be
-#   #  watched; the second is a boolean indicating whether the
-#   #  directories underneath the one specified are to be watched;
-#   #  the third is a list of flags as to what kind of changes to
-#   #  watch for. We're just looking at file additions / deletions.
-#   #
-#   change_handle = win32file.FindFirstChangeNotification (
-#     cod_nvidia_highlights_path,
-#     0,
-#     win32con.FILE_NOTIFY_CHANGE_FILE_NAME |
-#     win32con.FILE_NOTIFY_CHANGE_SIZE
-#   )
-
-#   #
-#   # Loop forever, listing any file changes. The WaitFor... will
-#   #  time out every half a second allowing for keyboard interrupts
-#   #  to terminate the loop.
-#   #
-#   try:
-#     moddate = os.stat(file_path)[8] # there are 10 attributes this call returns and you want the next to last
-   
-#     while 1:
-#       result = win32event.WaitForSingleObject (change_handle, 500)
-
-#       #
-#       # If the WaitFor... returned because of a notification (as
-#       #  opposed to timing out or some error) then look for the
-#       #  changes in the directory contents.
-#       #
-#       if result == win32con.WAIT_OBJECT_0:
-#         new_moddate = os.stat(file_path)[8] # there are 10 attributes this call returns and you want the next to last
-#         if new_moddate > moddate: print ("File Updated at " + time.ctime(new_moddate))
-#         new_moddate = moddate
-#         win32file.FindNextChangeNotification (change_handle)
-#   finally:
-#     win32file.FindCloseChangeNotification (change_handle)
-
-
-run(file_path)
-# mixed_solution()
+wz_mon = wzHighlightsMonitor("./", "test.txt")
+wz_mon.run()
