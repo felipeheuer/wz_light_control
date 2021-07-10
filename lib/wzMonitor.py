@@ -4,17 +4,14 @@ import time
 import json
 from time import sleep
 
-import win32file
-import win32event
-import win32con
 
 def checkIfExists(filePath):
     return os.path.exists(filePath) and os.path.isfile(filePath)
 
 
 class wzHighlightsMonitor:
-    def __init__(self, path, file) -> None:
-        self.debug = False
+    def __init__(self, path, file, debug = False) -> None:
+        self.debug = debug
         self.lastEvent = ''
         self.jsonData = None
         self.file = file
@@ -25,15 +22,6 @@ class wzHighlightsMonitor:
         self.status = checkIfExists(self.filePath)
         if self.status:
             self.__dbgPrint("File exists!")
-            self.changeHandle = win32file.FindFirstChangeNotification (self.folder,
-            0,
-            win32con.FILE_NOTIFY_CHANGE_SIZE|
-            win32con.FILE_NOTIFY_CHANGE_FILE_NAME|
-            win32con.FILE_NOTIFY_CHANGE_DIR_NAME|
-            win32con.FILE_NOTIFY_CHANGE_ATTRIBUTES|
-            win32con.FILE_NOTIFY_CHANGE_SIZE|
-            win32con.FILE_NOTIFY_CHANGE_LAST_WRITE|
-            win32con.FILE_NOTIFY_CHANGE_SECURITY)
             self.lastModDate = os.stat(self.filePath)[8]
             self.__dbgPrint ("Initial file datime is " + time.ctime(self.lastModDate))
             self.__getFileContents()
@@ -46,29 +34,16 @@ class wzHighlightsMonitor:
             print(*args, **kwargs)
 
 
-    def __monitorFile(self):
-        if not self.status:
-            return None
-
-        try:
-            while 1:
-                result = win32event.WaitForSingleObject (self.changeHandle, 500)
-                if result == win32con.WAIT_OBJECT_0:
-                    moddate = os.stat(self.filePath)[8] # there are 10 attributes this call returns and you want the next to last
-                    if moddate > self.lastModDate:
-                        self.__dbgPrint ("File Updated at " + time.ctime(moddate))
-                        self.lastEvent = self.__getLastEvent()
-                        if self.lastEvent is not None:
-                            print(self.lastEvent)
-                        self.lastModDate = moddate
-                    else:
-                        self.__dbgPrint ("No timestamp change on file")
-                    win32file.FindNextChangeNotification (self.changeHandle)
-        except:
-            self.__dbgPrint ("Drop", result)
-        finally:
-            self.__dbgPrint ("Exit", result)
-            win32file.FindCloseChangeNotification (self.changeHandle)
+    def __pollFileAttributes(self):
+        while 1:
+            moddate = os.stat(self.filePath)[8] # there are 10 attributes this call returns and you want the next to last
+            if moddate > self.lastModDate:
+                self.lastModDate = moddate
+                self.__dbgPrint ("File Updated at " + time.ctime(moddate))
+                self.lastEvent = self.__getLastEvent()
+                if self.lastEvent is not None:
+                    return self.lastEvent
+            sleep(1)
 
 
     def __readFile(self, encoding='utf-8'):
@@ -127,7 +102,12 @@ class wzHighlightsMonitor:
         return None
 
     def run(self):
+        if not self.status:
+            print("No file found!")
+            return None
         try:
-            self.__monitorFile()
+            # return self.__monitorFile()
+            return self.__pollFileAttributes()
         except:
             self.__dbgPrint("Quit")
+            return None
