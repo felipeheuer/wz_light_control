@@ -3,7 +3,7 @@ import os
 import time
 import json
 from time import sleep
-
+import subprocess
 
 def checkIfExists(filePath):
     return os.path.exists(filePath) and os.path.isfile(filePath)
@@ -12,6 +12,7 @@ def checkIfExists(filePath):
 class wzHighlightsMonitor:
     def __init__(self, path, file, debug = False) -> None:
         self.debug = debug
+        self.wzProcessName = "modernwarfare.exe"
         self.lastEvent = ''
         self.jsonData = None
         self.file = file
@@ -29,6 +30,16 @@ class wzHighlightsMonitor:
             self.__dbgPrint("Could not find Highlights file")
 
 
+    def wzIsRunning(self):
+        call = 'TASKLIST', '/FI', 'imagename eq %s' % self.wzProcessName
+        # use buildin check_output right away
+        output = subprocess.check_output(call).decode()
+        # check in last line for process name
+        last_line = output.strip().split('\r\n')[-1]
+        # because Fail message could be translated
+        return last_line.lower().startswith(self.wzProcessName.lower())
+
+
     def __dbgPrint(self, *args, **kwargs):
         if self.debug:
             print(*args, **kwargs)
@@ -44,6 +55,8 @@ class wzHighlightsMonitor:
                 if self.lastEvent is not None:
                     return self.lastEvent
             sleep(1)
+            if not self.wzIsRunning():
+                raise Exception("WZ is not running!")
 
 
     def __readFile(self, encoding='utf-8'):
@@ -102,12 +115,13 @@ class wzHighlightsMonitor:
         return None
 
     def run(self):
-        if not self.status:
-            print("No file found!")
+        if not self.status or not self.wzIsRunning():
+            self.__dbgPrint("WZ not running")
             return None
         try:
             # return self.__monitorFile()
             return self.__pollFileAttributes()
-        except:
-            self.__dbgPrint("Quit")
+        except Exception as err:
+            self.__dbgPrint(err)
+            raise
             return None
