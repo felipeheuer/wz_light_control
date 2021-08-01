@@ -97,5 +97,4 @@ class mqtt_hassio():
 
     def good_bye(self):
         self._do_publish('Recovering...')
-        print(self.topic, 'Recovering...')
         self._do_disconnect()
