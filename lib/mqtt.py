@@ -2,7 +2,6 @@ from time import sleep, time
 import paho.mqtt.client as mqtt
 from lib import config, debug, timeout
 
-CONNECTION_STATUS = ["connected", "disconnected", "trying"]
 
 class mqtt_hassio():
     def __del__(self):
@@ -80,11 +79,9 @@ class mqtt_hassio():
 
     def _on_connect(self, client, userdata, flags, rc, properties=None):
         debug.dbgPrint("Connected to server!", client, userdata, flags, rc)
-        pass
 
     def _on_publish(self, client,userdata,result):
         debug.dbgPrint(client, userdata, result, "data published!")
-        pass
 
 
     #######################################
