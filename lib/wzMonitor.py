@@ -32,11 +32,8 @@ class wzHighlightsMonitor:
 
     def wzIsRunning(self):
         call = 'TASKLIST', '/FI', 'imagename eq %s' % self.wzProcessName
-        # use buildin check_output right away
         output = subprocess.check_output(call).decode()
-        # check in last line for process name
         last_line = output.strip().split('\r\n')[-1]
-        # because Fail message could be translated
         return last_line.lower().startswith(self.wzProcessName.lower())
 
 

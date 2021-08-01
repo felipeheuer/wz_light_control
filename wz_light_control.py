@@ -3,6 +3,7 @@ import os
 from lib import wzMonitor
 from lib import mqtt as hassio_mqtt
 from lib import config
+from lib import timeout
 
 def start_wz_monitor():
     if config.wzHighlightsPath is None:
@@ -13,6 +14,7 @@ def start_wz_monitor():
         sleep(2)
     print("Go!")
     wz_hassio = hassio_mqtt.mqtt_hassio(config.wzHassioIpAddress, config.wzHassioPort, config.wzHassioMQTTTopic)
+    print(config.wzHassioIpAddress, config.wzHassioPort, config.wzHassioMQTTTopic)
 
     while 1:
         last_event = None
@@ -31,6 +33,13 @@ def start_wz_monitor():
     wz_hassio.good_bye()
     print("End")
 
+@timeout.exit_after(5)
+def teste(n):
+    print('countdown started', flush=True)
+    for i in range(n, -1, -1):
+        print(i, end=', ', flush=True)
+        sleep(1)
+    print('countdown finished')
 
 if __name__ == "__main__":
     start_wz_monitor()

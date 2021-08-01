@@ -9,3 +9,5 @@ wzHighlightsPath  = None    # automatic lookup
 wzHassioIpAddress = "192.168.0.200"
 wzHassioPort      = 1893
 wzHassioMQTTTopic = "wz/commands/action"
+wzHassioUser      = "wz_lights"
+wzHassioPassword  = "your_password"
