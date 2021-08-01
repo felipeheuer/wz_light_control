@@ -1,4 +1,5 @@
 test_files/
+lig/config.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
