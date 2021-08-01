@@ -5,6 +5,8 @@ import json
 from time import sleep
 import subprocess
 
+from lib import debug as dbg
+
 def checkIfExists(filePath):
     return os.path.exists(filePath) and os.path.isfile(filePath)
 
@@ -19,24 +21,21 @@ class wzHighlightsMonitor:
         self.folder = path
         self.filePath = path + file
         self.fileType = ''
-        self.__dbgPrint (self.filePath)
+        dbg.dbgPrint (self.filePath)
         self.status = checkIfExists(self.filePath)
         if self.status:
-            self.__dbgPrint("File exists!")
+            dbg.dbgPrint("File exists!")
             self.lastModDate = os.stat(self.filePath)[8]
-            self.__dbgPrint ("Initial file datime is " + time.ctime(self.lastModDate))
+            dbg.dbgPrint ("Initial file datime is " + time.ctime(self.lastModDate))
             self.__getFileContents()
         else:
-            self.__dbgPrint("Could not find Highlights file")
+            dbg.dbgPrint("Could not find Highlights file")
 
 
     def wzIsRunning(self):
         call = 'TASKLIST', '/FI', 'imagename eq %s' % self.wzProcessName
-        # use buildin check_output right away
         output = subprocess.check_output(call).decode()
-        # check in last line for process name
         last_line = output.strip().split('\r\n')[-1]
-        # because Fail message could be translated
         return last_line.lower().startswith(self.wzProcessName.lower())
 
 
@@ -50,7 +49,7 @@ class wzHighlightsMonitor:
             moddate = os.stat(self.filePath)[8] # there are 10 attributes this call returns and you want the next to last
             if moddate > self.lastModDate:
                 self.lastModDate = moddate
-                self.__dbgPrint ("File Updated at " + time.ctime(moddate))
+                dbg.dbgPrint ("File Updated at " + time.ctime(moddate))
                 self.lastEvent = self.__getLastEvent()
                 if self.lastEvent is not None:
                     return self.lastEvent
@@ -76,9 +75,9 @@ class wzHighlightsMonitor:
                     self.jsonData = json.loads(self.__readFile(encoding='utf-16-le'))
                     self.fileType = 'utf-16-le'
                 except:
-                    self.__dbgPrint("Could not open NVidia Highlights File. Exiting...")
+                    dbg.dbgPrint("Could not open NVidia Highlights File. Exiting...")
                     exit(-1)
-            self.__dbgPrint("File type is ", self.fileType)
+            dbg.dbgPrint("File type is ", self.fileType)
         else:
             self.jsonData = json.loads(self.__readFile(encoding=self.fileType))
 
@@ -99,12 +98,12 @@ class wzHighlightsMonitor:
             lastHighlight = self.__getLastEventId()
             if lastHighlight is None:
                 continue
-            self.__dbgPrint("Last Highlight: ", lastHighlight)
+            dbg.dbgPrint("Last Highlight: ", lastHighlight)
 
             try:
                 for highlight in self.jsonData['highlights']:
                     if highlight['id'] == lastHighlight:
-                        self.__dbgPrint("Retries:", retries)
+                        dbg.dbgPrint("Retries:", retries)
                         return highlight['highlightDefinitionId']
             except:
                 None
@@ -116,12 +115,12 @@ class wzHighlightsMonitor:
 
     def run(self):
         if not self.status or not self.wzIsRunning():
-            self.__dbgPrint("WZ not running")
+            dbg.dbgPrint("WZ not running")
             return None
         try:
             # return self.__monitorFile()
             return self.__pollFileAttributes()
         except Exception as err:
-            self.__dbgPrint(err)
+            dbg.dbgPrint(err)
             raise
             return None
