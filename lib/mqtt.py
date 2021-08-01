@@ -64,7 +64,7 @@ class mqtt_hassio():
         except:
             debug.dbgPrint("Error on disconnection")
 
-    @timeout.exit_after(3)
+    @timeout.exit_after(5)
     def _disconnect(self):
         self.client.disconnect()
         while self.client.is_connected():
@@ -94,4 +94,3 @@ class mqtt_hassio():
 
     def good_bye(self):
         self._do_publish('Recovering...')
-        self._do_disconnect()

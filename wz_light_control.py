@@ -35,9 +35,11 @@ def start_wz_monitor():
     wz_hassio.good_bye()
     print("End")
 
-    
+
 if __name__ == "__main__":
     try:
         start_wz_monitor()
     except:
-        pass
+        debug.dbgPrint("Closing...")
+    finally:
+        exit()

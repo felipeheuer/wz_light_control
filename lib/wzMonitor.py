@@ -12,8 +12,7 @@ def checkIfExists(filePath):
 
 
 class wzHighlightsMonitor:
-    def __init__(self, path, file, debug = False) -> None:
-        self.debug = debug
+    def __init__(self, path, file) -> None:
         self.wzProcessName = "modernwarfare.exe"
         self.lastEvent = ''
         self.jsonData = None
@@ -37,11 +36,6 @@ class wzHighlightsMonitor:
         output = subprocess.check_output(call).decode()
         last_line = output.strip().split('\r\n')[-1]
         return last_line.lower().startswith(self.wzProcessName.lower())
-
-
-    def __dbgPrint(self, *args, **kwargs):
-        if self.debug:
-            print(*args, **kwargs)
 
 
     def __pollFileAttributes(self):
