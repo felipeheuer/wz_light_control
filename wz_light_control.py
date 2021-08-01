@@ -6,6 +6,7 @@ from lib import config
 from lib import timeout
 from lib import debug
 
+
 def start_wz_monitor():
     if config.wzHighlightsPath is None:
         config.wzHighlightsPath = os.getenv('LOCALAPPDATA') + "/NVIDIA Corporation/NVIDIA Share/Highlights/"
@@ -34,6 +35,7 @@ def start_wz_monitor():
     wz_hassio.good_bye()
     print("End")
 
+    
 if __name__ == "__main__":
     try:
         start_wz_monitor()
